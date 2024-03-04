@@ -25,12 +25,11 @@ def reduce_factors(factors, observed_values):
                 current_factor_df.drop(mismatched_indices, inplace=True)
 
 
-def multiply_factor(variable, first_factor, other_factor):
+def multiply_factor(variable, first_factor, second_factor):
     """
     Multiply two factors based on the variable
     """
-    # Step 1: Merge factors based on common column(s)
-    merged_factors = pd.merge(first_factor, other_factor, on=variable)
+    merged_factors = pd.merge(first_factor, second_factor, on=variable)
     merged_factors['prob'] = merged_factors['prob_x'] * merged_factors['prob_y']
     merged_factors.drop(columns=['prob_x', 'prob_y'], inplace=True)
     return merged_factors
@@ -157,13 +156,6 @@ class VariableElimination:
             first_factor = factor_mul_result
         return vars, factor_mul_result
 
-    def update_max_size_factor(self, factor):
-        """"
-        Updates the maximum factor size if applicable
-        """
-        if len(list(factor.columns[:-1])) > self.max_size_factor:
-            self.max_size_factor = len(list(factor.columns[:-1]))
-
     def initialize_factors(self, observed_values):
         """
         Initialize factors based on the observed values
@@ -180,6 +172,7 @@ class VariableElimination:
             new_factors[new_key] = factor
             index += 1
         # Reduce factors given the observation
+        print(type(new_factors))
         reduce_factors(new_factors, observed_values)
         # Change factors in the variable elimination class
         self.factors = new_factors
