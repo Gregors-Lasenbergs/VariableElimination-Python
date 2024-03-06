@@ -27,9 +27,8 @@ if __name__ == '__main__':
 
     # Set the node to be queried as follows:
     query = 'MaryCalls'
-
     # The evidence is represented in the following way (can also be empty when there is no evidence):
-    evidence = {'Burglary': 'False', 'Earthquake': 'True'}
+    evidence = {'JohnCalls': 'True'}
 
     # Determine your elimination ordering before you call the run function. The elimination ordering
     # is either specified by a list or a heuristic function that determines the elimination ordering

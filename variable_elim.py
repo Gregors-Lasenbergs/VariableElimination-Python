@@ -4,8 +4,8 @@
 Class for the implementation of the variable elimination algorithm.
 
 """
-import itertools
 import pandas as pd
+from functools import reduce
 
 
 def reduce_factors(factors, observed_values):
@@ -13,23 +13,28 @@ def reduce_factors(factors, observed_values):
     Reduce factors based on the observed values
     """
     # Loop through all factors
+    print("Reducing factors based on observed values: ", observed_values)
     for key in factors:
         # Check through all observed variables if they are in factor
         for variable, value in observed_values.items():
             if variable in key[1]:
+                print("Factor before reduction: ", factors[key])
                 # Take current factor we are checking
                 current_factor_df = factors[key]
                 # Check in the factor where we need to change observed variable value
                 mismatched_indices = current_factor_df.index[current_factor_df[variable] != value]
                 # Delete values from factor that don't match the observation
                 current_factor_df.drop(mismatched_indices, inplace=True)
+                print("Factor after reduction: ", factors[key])
+                print()
 
 
-def multiply_factor(variable, first_factor, second_factor):
+def multiply_factor(first_factor, second_factor):
     """
     Multiply two factors based on the variable
     """
-    merged_factors = pd.merge(first_factor, second_factor, on=variable)
+    common_vars = list(set(first_factor.columns[:-1]) & set(second_factor.columns[:-1]))
+    merged_factors = pd.merge(first_factor, second_factor, on=common_vars)
     merged_factors['prob'] = merged_factors['prob_x'] * merged_factors['prob_y']
     merged_factors.drop(columns=['prob_x', 'prob_y'], inplace=True)
     return merged_factors
@@ -89,7 +94,7 @@ class VariableElimination:
                 print("Factors before multiplication:")
                 for factor in factors_containing_variable:
                     print(self.factors[factor])
-                variables, factor_for_sum = self.multiply_all_variable_factors(variable, factors_containing_variable)
+                variables, factor_for_sum = self.multiply_all_variable_factors(factors_containing_variable)
                 print("Multiplied factor result: \n", factor_for_sum)
                 print()
 
@@ -140,7 +145,7 @@ class VariableElimination:
         factor['prob'] = factor['prob'] / prob_sum
         print("Resulting probability distribution after variable elimination: \n", factor)
 
-    def multiply_all_variable_factors(self, variable, factors_containing_variable):
+    def multiply_all_variable_factors(self, factors_containing_variable):
         """
         Multiply all factors containing the variable
         """
@@ -148,13 +153,9 @@ class VariableElimination:
         for key in factors_containing_variable:
             vars.extend(list(self.factors[key].columns[:-1]))
             vars = list(set(vars))
-        first_factor = self.factors[factors_containing_variable[0]]
 
-        for i in range(1, len(factors_containing_variable)):
-            factor_mul_result = multiply_factor(variable, first_factor,
-                                                self.factors[factors_containing_variable[i]])
-            first_factor = factor_mul_result
-        return vars, factor_mul_result
+        result = reduce(lambda x, y: multiply_factor(x, y), [self.factors[i] for i in factors_containing_variable])
+        return vars, result
 
     def initialize_factors(self, observed_values):
         """
@@ -172,7 +173,7 @@ class VariableElimination:
             new_factors[new_key] = factor
             index += 1
         # Reduce factors given the observation
-        print(type(new_factors))
+        
         reduce_factors(new_factors, observed_values)
         # Change factors in the variable elimination class
         self.factors = new_factors
