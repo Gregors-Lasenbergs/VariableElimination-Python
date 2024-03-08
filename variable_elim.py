@@ -75,7 +75,6 @@ class VariableElimination:
         Output: A variable holding the probability distribution
                 for the query variable
         """
-        var = 0
         i = len(self.factors)
         self.initialize_factors(observed)
         # Loop through all variables in the elimination order
@@ -124,11 +123,11 @@ class VariableElimination:
         # If there are multiple factors containing the query variable, multiply them
         if len(self.factors) > 1:
             factors_containing_variable = []
-            for fact in self.factors:
-                factors_containing_variable.append(fact)
+            for factor in self.factors:
+                factors_containing_variable.append(factor)
 
             print("Last factors with query variable, before multiplication: ", self.factors)
-            result = self.multiply_all_variable_factors(query, factors_containing_variable)
+            result = self.multiply_all_variable_factors(factors_containing_variable)
 
             for i in range(0, len(factors_containing_variable)):
                 self.factors.pop(factors_containing_variable[i])
@@ -149,13 +148,13 @@ class VariableElimination:
         """
         Multiply all factors containing the variable
         """
-        vars = []
+        variables = []
         for key in factors_containing_variable:
-            vars.extend(list(self.factors[key].columns[:-1]))
-            vars = list(set(vars))
+            variables.extend(list(self.factors[key].columns[:-1]))
+            variables = list(set(variables))
 
         result = reduce(lambda x, y: multiply_factor(x, y), [self.factors[i] for i in factors_containing_variable])
-        return vars, result
+        return variables, result
 
     def initialize_factors(self, observed_values):
         """
@@ -173,7 +172,7 @@ class VariableElimination:
             new_factors[new_key] = factor
             index += 1
         # Reduce factors given the observation
-        
+
         reduce_factors(new_factors, observed_values)
         # Change factors in the variable elimination class
         self.factors = new_factors
